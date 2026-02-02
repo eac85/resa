@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import axios from 'axios';
 
@@ -68,22 +68,8 @@ function App() {
     setRandomTitle(tripTitles[randomIndex]);
   }, []);
 
-  // Fetch all trips on mount
-  useEffect(() => {
-    fetchTrips();
-  }, []);
-
-  // Fetch days when trip changes
-  useEffect(() => {
-    if (currentTrip) {
-      fetchDaysForTrip(currentTrip.id);
-      fetchLodging();
-      fetchFood();
-      fetchActivities();
-    }
-  }, [currentTrip]);
-
-  const fetchTrips = async () => {
+  // Define fetch functions with useCallback (must be defined before useEffects that use them)
+  const fetchTrips = useCallback(async () => {
     try {
       const response = await api.get('/api/trips');
       setTrips(response.data);
@@ -104,7 +90,55 @@ function App() {
         alert('Permission denied. Please check your Supabase RLS settings. See QUICK_FIX.md');
       }
     }
-  };
+  }, [currentTrip]);
+
+  // Lodging functions
+  const fetchLodging = useCallback(async () => {
+    if (!currentTrip) return;
+    try {
+      const response = await api.get(`/api/trips/${currentTrip.id}/lodging`);
+      setLodging(response.data);
+    } catch (error) {
+      console.error('Error fetching lodging:', error);
+    }
+  }, [currentTrip]);
+
+  // Activities functions
+  const fetchActivities = useCallback(async () => {
+    if (!currentTrip) return;
+    try {
+      const response = await api.get(`/api/trips/${currentTrip.id}/activities`);
+      setActivities(response.data);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    }
+  }, [currentTrip]);
+
+  // Food functions
+  const fetchFood = useCallback(async () => {
+    if (!currentTrip) return;
+    try {
+      const response = await api.get(`/api/trips/${currentTrip.id}/food`);
+      setFood(response.data);
+    } catch (error) {
+      console.error('Error fetching food:', error);
+    }
+  }, [currentTrip]);
+
+  // Fetch all trips on mount
+  useEffect(() => {
+    fetchTrips();
+  }, [fetchTrips]);
+
+  // Fetch days when trip changes
+  useEffect(() => {
+    if (currentTrip) {
+      fetchDaysForTrip(currentTrip.id);
+      fetchLodging();
+      fetchFood();
+      fetchActivities();
+    }
+  }, [currentTrip, fetchLodging, fetchFood, fetchActivities]);
 
   const fetchDaysForTrip = async (tripId) => {
     try {
@@ -293,17 +327,6 @@ function App() {
     }
   };
 
-  // Lodging functions
-  const fetchLodging = async () => {
-    if (!currentTrip) return;
-    try {
-      const response = await api.get(`/api/trips/${currentTrip.id}/lodging`);
-      setLodging(response.data);
-    } catch (error) {
-      console.error('Error fetching lodging:', error);
-    }
-  };
-
   const handleCreateLodging = async (e) => {
     e.preventDefault();
     if (!currentTrip) return;
@@ -339,17 +362,6 @@ function App() {
     }
   };
 
-  // Activities functions
-  const fetchActivities = async () => {
-    if (!currentTrip) return;
-    try {
-      const response = await api.get(`/api/trips/${currentTrip.id}/activities`);
-      setActivities(response.data);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-    }
-  };
-
   const handleCreateActivity = async (e) => {
     e.preventDefault();
     if (!currentTrip) return;
@@ -382,17 +394,6 @@ function App() {
       fetchActivities();
     } catch (error) {
       console.error('Error deleting activity:', error);
-    }
-  };
-
-  // Food functions
-  const fetchFood = async () => {
-    if (!currentTrip) return;
-    try {
-      const response = await api.get(`/api/trips/${currentTrip.id}/food`);
-      setFood(response.data);
-    } catch (error) {
-      console.error('Error fetching food:', error);
     }
   };
 
