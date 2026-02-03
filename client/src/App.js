@@ -3,8 +3,12 @@ import './App.css';
 import axios from 'axios';
 
 // Configure axios base URL
+// In production (Vercel), use relative path /api
+// In development, use localhost
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001',
+  baseURL: process.env.NODE_ENV === 'production' 
+    ? '/api' 
+    : (process.env.REACT_APP_API_URL || 'http://localhost:5001'),
 });
 
 const tripTitles = [
@@ -15,7 +19,12 @@ const tripTitles = [
   "reality: paused",
   "normalize having fun",
   "treat yourself era",
-  "escape plan activated"
+  "escape plan activated",
+  "yep yep yep",
+"oh we're SO back",
+"this is it",
+"the vibe check passed",
+"certified adventure"
 ];
 
 function App() {
@@ -183,8 +192,10 @@ function App() {
           const monthIndex = date.getMonth();
           const firstDayDate = newDaysData[0].date.split('-').map(Number);
           const firstDayMonth = new Date(firstDayDate[0], firstDayDate[1] - 1, firstDayDate[2]).getMonth();
-          // Show month abbreviation if different from first day's month
-          const monthLabel = monthIndex !== firstDayMonth ? date.toLocaleDateString('en-US', { month: 'short' }) : '';
+          // Show month abbreviation on first day or when month changes
+          const monthLabel = (index === 0 || monthIndex !== firstDayMonth) 
+            ? date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() 
+            : '';
           return {
             id: day.id,
             date: dayNumber,
@@ -213,8 +224,10 @@ function App() {
           const monthIndex = date.getMonth();
           const firstDayDate = daysData[0].date.split('-').map(Number);
           const firstDayMonth = new Date(firstDayDate[0], firstDayDate[1] - 1, firstDayDate[2]).getMonth();
-          // Show month abbreviation if different from first day's month
-          const monthLabel = monthIndex !== firstDayMonth ? date.toLocaleDateString('en-US', { month: 'short' }) : '';
+          // Show month abbreviation on first day or when month changes
+          const monthLabel = (index === 0 || monthIndex !== firstDayMonth) 
+            ? date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() 
+            : '';
           return {
             id: day.id,
             date: dayNumber,

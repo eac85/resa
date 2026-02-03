@@ -19,10 +19,12 @@ You'll need to add your Supabase credentials as environment variables in Vercel:
 
 1. Go to your Vercel project dashboard
 2. Navigate to Settings → Environment Variables
-3. Add these variables:
+3. Add these variables (for Production, Preview, and Development):
    - `SUPABASE_URL` - Your Supabase project URL
    - `SUPABASE_ANON_KEY` - Your Supabase anon key
    - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
+
+**Note:** The frontend will automatically use `/api` in production (no need to set `REACT_APP_API_URL`).
 
 ## Step 3: Deploy
 
