@@ -479,6 +479,81 @@ app.delete('/api/food/:id', async (req, res) => {
   }
 });
 
+// ==================== DECISIONS ROUTES ====================
+
+// Get decisions for a trip
+app.get('/api/trips/:tripId/decisions', async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { data, error } = await supabase
+      .from('decisions')
+      .select('*')
+      .eq('trip_id', tripId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching decisions:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create decision
+app.post('/api/decisions', async (req, res) => {
+  try {
+    const { trip_id, title, description, status, decision } = req.body;
+    const { data, error } = await supabase
+      .from('decisions')
+      .insert([{ trip_id, title, description, status, decision }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error creating decision:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update decision
+app.put('/api/decisions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, status, decision } = req.body;
+    const { data, error } = await supabase
+      .from('decisions')
+      .update({ title, description, status, decision })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating decision:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete decision
+app.delete('/api/decisions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('decisions')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ message: 'Decision deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting decision:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== COMPLETE TRIP DATA ROUTE ====================
 
 // Get complete trip data (trip + days + lodging + food) - for main app view

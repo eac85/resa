@@ -45,12 +45,15 @@ function App() {
   const [showLodgingModal, setShowLodgingModal] = useState(false);
   const [showActivitiesModal, setShowActivitiesModal] = useState(false);
   const [showFoodModal, setShowFoodModal] = useState(false);
+  const [showDecisionsModal, setShowDecisionsModal] = useState(false);
   const [lodging, setLodging] = useState([]);
   const [activities, setActivities] = useState([]);
   const [food, setFood] = useState([]);
+  const [decisions, setDecisions] = useState([]);
   const [editingLodging, setEditingLodging] = useState(null);
   const [editingActivity, setEditingActivity] = useState(null);
   const [editingFood, setEditingFood] = useState(null);
+  const [editingDecision, setEditingDecision] = useState(null);
   const [newLodging, setNewLodging] = useState({
     name: '',
     address: '',
@@ -69,6 +72,12 @@ function App() {
     cuisine: '',
     link: '',
     notes: ''
+  });
+  const [newDecision, setNewDecision] = useState({
+    title: '',
+    description: '',
+    status: 'pending',
+    decision: ''
   });
 
   // Set random title on mount
@@ -138,6 +147,53 @@ function App() {
     }
   }, [currentTrip]);
 
+  // Decisions functions
+  const fetchDecisions = useCallback(async () => {
+    if (!currentTrip) return;
+    try {
+      const response = await api.get(`/api/trips/${currentTrip.id}/decisions`);
+      setDecisions(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Error fetching decisions:', error);
+      setDecisions([]);
+    }
+  }, [currentTrip]);
+
+  const handleCreateDecision = async (e) => {
+    e.preventDefault();
+    if (!currentTrip) return;
+    try {
+      if (editingDecision) {
+        await api.put(`/api/decisions/${editingDecision.id}`, {
+          ...newDecision,
+          trip_id: currentTrip.id
+        });
+      } else {
+        await api.post('/api/decisions', {
+          ...newDecision,
+          trip_id: currentTrip.id
+        });
+      }
+      fetchDecisions();
+      setNewDecision({ title: '', description: '', status: 'pending', decision: '' });
+      setEditingDecision(null);
+      setShowDecisionsModal(false);
+    } catch (error) {
+      console.error('Error saving decision:', error);
+      alert('Error saving decision. Please try again.');
+    }
+  };
+
+  const handleDeleteDecision = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this decision?')) return;
+    try {
+      await api.delete(`/api/decisions/${id}`);
+      fetchDecisions();
+    } catch (error) {
+      console.error('Error deleting decision:', error);
+    }
+  };
+
   // Fetch all trips on mount
   useEffect(() => {
     fetchTrips();
@@ -150,8 +206,9 @@ function App() {
       fetchLodging();
       fetchFood();
       fetchActivities();
+      fetchDecisions();
     }
-  }, [currentTrip, fetchLodging, fetchFood, fetchActivities]);
+  }, [currentTrip, fetchLodging, fetchFood, fetchActivities, fetchDecisions]);
 
   const fetchDaysForTrip = async (tripId) => {
     try {
@@ -569,6 +626,19 @@ function App() {
               }}
             >
               Food Research {food.length > 0 && `(${food.length})`}
+            </button>
+            <button 
+              className="reference-button"
+              onClick={() => {
+                if (!currentTrip) {
+                  alert('Please create or select a trip first');
+                  return;
+                }
+                setShowDecisionsModal(true);
+                fetchDecisions();
+              }}
+            >
+              Decisions {decisions.length > 0 && `(${decisions.length})`}
             </button>
           </div>
         </div>
@@ -1010,6 +1080,139 @@ function App() {
                 setShowFoodModal(false);
                 setEditingFood(null);
                 setNewFood({ name: '', location: '', cuisine: '', link: '', notes: '' });
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Decisions Modal */}
+      {showDecisionsModal && (
+        <div className="modal-overlay" onClick={() => {
+          setShowDecisionsModal(false);
+          setEditingDecision(null);
+          setNewDecision({ title: '', description: '', status: 'pending', decision: '' });
+        }}>
+          <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">Decisions</h2>
+            <form onSubmit={handleCreateDecision}>
+              <div className="form-group">
+                <label htmlFor="decision-title">Title</label>
+                <input
+                  type="text"
+                  id="decision-title"
+                  value={newDecision.title}
+                  onChange={(e) => setNewDecision({ ...newDecision, title: e.target.value })}
+                  placeholder="e.g., Should we rent a car?"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="decision-description">Description</label>
+                <textarea
+                  id="decision-description"
+                  value={newDecision.description}
+                  onChange={(e) => setNewDecision({ ...newDecision, description: e.target.value })}
+                  placeholder="What needs to be decided?"
+                  rows="3"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="decision-status">Status</label>
+                  <select
+                    id="decision-status"
+                    value={newDecision.status}
+                    onChange={(e) => setNewDecision({ ...newDecision, status: e.target.value })}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="decided">Decided</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+              {newDecision.status !== 'pending' && (
+                <div className="form-group">
+                  <label htmlFor="decision-decision">Decision</label>
+                  <textarea
+                    id="decision-decision"
+                    value={newDecision.decision}
+                    onChange={(e) => setNewDecision({ ...newDecision, decision: e.target.value })}
+                    placeholder="What was decided?"
+                    rows="2"
+                  />
+                </div>
+              )}
+              <div className="modal-buttons">
+                <button 
+                  type="button" 
+                  className="cancel-button"
+                  onClick={() => {
+                    setEditingDecision(null);
+                    setNewDecision({ title: '', description: '', status: 'pending', decision: '' });
+                  }}
+                >
+                  Clear
+                </button>
+                <button type="submit" className="submit-button">
+                  {editingDecision ? 'Update' : 'Add'} Decision
+                </button>
+              </div>
+            </form>
+            <div className="items-list">
+              <h3>Saved Decisions ({decisions.length})</h3>
+              {decisions.length === 0 ? (
+                <p className="empty-message">No decisions added yet</p>
+              ) : (
+                decisions.map(item => (
+                  <div key={item.id} className="item-card">
+                    <div className="item-content">
+                      <h4>{item.title}</h4>
+                      {item.description && <p>{item.description}</p>}
+                      <p>
+                        <strong>Status:</strong>{' '}
+                        <span className={`status-badge status-${item.status}`}>
+                          {item.status}
+                        </span>
+                      </p>
+                      {item.decision && (
+                        <p><strong>Decision:</strong> {item.decision}</p>
+                      )}
+                    </div>
+                    <div className="item-actions">
+                      <button 
+                        className="edit-button"
+                        onClick={() => {
+                          setEditingDecision(item);
+                          setNewDecision({
+                            title: item.title,
+                            description: item.description || '',
+                            status: item.status || 'pending',
+                            decision: item.decision || ''
+                          });
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-button"
+                        onClick={() => handleDeleteDecision(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <button 
+              className="close-modal-button"
+              onClick={() => {
+                setShowDecisionsModal(false);
+                setEditingDecision(null);
+                setNewDecision({ title: '', description: '', status: 'pending', decision: '' });
               }}
             >
               Close
