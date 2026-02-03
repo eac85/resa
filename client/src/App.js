@@ -81,9 +81,11 @@ function App() {
   const fetchTrips = useCallback(async () => {
     try {
       const response = await api.get('/api/trips');
-      setTrips(response.data);
-      if (response.data.length > 0 && !currentTrip) {
-        setCurrentTrip(response.data[0]);
+      // Ensure we always set an array
+      const tripsData = Array.isArray(response.data) ? response.data : [];
+      setTrips(tripsData);
+      if (tripsData.length > 0 && !currentTrip) {
+        setCurrentTrip(tripsData[0]);
       }
     } catch (error) {
       console.error('Error fetching trips:', error);
@@ -117,9 +119,10 @@ function App() {
     if (!currentTrip) return;
     try {
       const response = await api.get(`/api/trips/${currentTrip.id}/activities`);
-      setActivities(response.data);
+      setActivities(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching activities:', error);
+      setActivities([]);
     }
   }, [currentTrip]);
 
@@ -128,9 +131,10 @@ function App() {
     if (!currentTrip) return;
     try {
       const response = await api.get(`/api/trips/${currentTrip.id}/food`);
-      setFood(response.data);
+      setFood(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching food:', error);
+      setFood([]);
     }
   }, [currentTrip]);
 
@@ -157,7 +161,7 @@ function App() {
       
       // Fetch existing days
       const daysResponse = await api.get(`/api/trips/${tripId}/days`);
-      const daysData = daysResponse.data;
+      const daysData = Array.isArray(daysResponse.data) ? daysResponse.data : [];
       
       // Generate days for the date range if none exist
       if (daysData.length === 0) {
@@ -287,11 +291,13 @@ function App() {
   const handleDayClick = async (day) => {
     setSelectedDay(day.date);
     // Update selected state for all days
-    const updatedDays = days.map(d => ({
-      ...d,
-      selected: d.date === day.date
-    }));
-    setDays(updatedDays);
+    if (Array.isArray(days)) {
+      const updatedDays = days.map(d => ({
+        ...d,
+        selected: d.date === day.date
+      }));
+      setDays(updatedDays);
+    }
     
     // Fetch plan for selected day
     try {
@@ -318,10 +324,12 @@ function App() {
         await api.put(`/api/days/${dayData.id}`, { plan });
         setCurrentPlan(plan);
         // Update local state
-        const updatedDays = days.map(d => 
-          d.id === dayData.id ? { ...d, plan } : d
-        );
-        setDays(updatedDays);
+        if (Array.isArray(days)) {
+          const updatedDays = days.map(d => 
+            d.id === dayData.id ? { ...d, plan } : d
+          );
+          setDays(updatedDays);
+        }
       } else {
         // This shouldn't happen if days are properly generated, but handle it anyway
         const dayDataWithDate = days.find(d => d.date === selectedDay);
@@ -460,7 +468,7 @@ function App() {
                   if (trip) handleTripSelect(trip);
                 }}
               >
-                {trips.map(trip => (
+                {Array.isArray(trips) && trips.map(trip => (
                   <option key={trip.id} value={trip.id}>
                     {trip.name}
                   </option>
@@ -479,7 +487,7 @@ function App() {
         {currentTrip && days.length > 0 ? (
           <>
             <div className="day-selector">
-              {days.map((day) => (
+              {Array.isArray(days) && days.map((day) => (
                 <div
                   key={day.id}
                   className={`day-circle ${day.selected ? 'selected' : ''}`}
@@ -705,7 +713,7 @@ function App() {
               {lodging.length === 0 ? (
                 <p className="empty-message">No lodging added yet</p>
               ) : (
-                lodging.map(item => (
+                Array.isArray(lodging) && lodging.map(item => (
                   <div key={item.id} className="item-card">
                     <div className="item-content">
                       <h4>{item.name}</h4>
@@ -948,7 +956,7 @@ function App() {
               {food.length === 0 ? (
                 <p className="empty-message">No food research added yet</p>
               ) : (
-                food.map(item => (
+                Array.isArray(food) && food.map(item => (
                   <div key={item.id} className="item-card">
                     <div className="item-content">
                       <h4>{item.name}</h4>
