@@ -3,11 +3,11 @@ import './App.css';
 import axios from 'axios';
 
 // Configure axios base URL
-// In production (Vercel), use relative path /api
+// In production (Vercel), use empty string since routes already have /api prefix
 // In development, use localhost
 const api = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
-    ? '/api' 
+    ? '' 
     : (process.env.REACT_APP_API_URL || 'http://localhost:5001'),
 });
 
