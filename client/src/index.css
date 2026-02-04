@@ -1,6 +1,12 @@
 :root {
-  --primary-yellow: #FEC955;
+  --primary-yellow: #ebedc5;
   --primary-yellow-hover: #ffd700;
+  --cream: #f5f5f5;
+  --cream: #F4C9D6;
+  --espresso: #3e273e;
+  --cream: #fff7ec;
+  --oat-milk: #e8dbcc;
+  --dark-chocolate: #34150f;
 }
 
 * {
@@ -15,7 +21,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
+  background-color: var(--cream);
 }
 
 code {

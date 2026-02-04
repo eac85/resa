@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import axios from 'axios';
+import { supabase } from './config/supabase';
+import TripSharing from './components/TripSharing';
 
 // Configure axios base URL
 // In production (Vercel), use empty string since routes already have /api prefix
@@ -9,6 +11,24 @@ const api = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
     ? '' 
     : (process.env.REACT_APP_API_URL || 'http://localhost:5001'),
+});
+
+// Add auth token to all requests
+api.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  return config;
+});
+
+// Add auth token to all requests
+api.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`;
+  }
+  return config;
 });
 
 const tripTitles = [
@@ -28,6 +48,14 @@ const tripTitles = [
 ];
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('signin'); // 'signin' or 'signup'
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  
   const [trips, setTrips] = useState([]);
   const [currentTrip, setCurrentTrip] = useState(null);
   const [days, setDays] = useState([]);
@@ -64,7 +92,9 @@ function App() {
   const [newActivity, setNewActivity] = useState({
     name: '',
     location: '',
-    notes: ''
+    notes: '',
+    icon: 'fa-hiking', // default icon
+    link: ''
   });
   const [newFood, setNewFood] = useState({
     name: '',
@@ -79,6 +109,93 @@ function App() {
     status: 'pending',
     decision: ''
   });
+  const [isTripOwner, setIsTripOwner] = useState(false);
+  const [tripMembers, setTripMembers] = useState([]);
+
+  // Check auth status on mount
+  useEffect(() => {
+    checkUser();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user ?? null);
+    setLoading(false);
+  };
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: authEmail,
+        password: authPassword,
+        options: {
+          data: {
+            full_name: authName,
+          }
+        }
+      });
+      if (error) throw error;
+      
+      if (data.user) {
+        // Ensure profile is created (trigger should do this, but add fallback)
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: authEmail,
+              full_name: authName
+            }, {
+              onConflict: 'id'
+            });
+          
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            // Don't fail signup if profile creation fails - trigger might have already done it
+          }
+        } catch (profileErr) {
+          console.error('Error ensuring profile exists:', profileErr);
+          // Continue anyway - trigger might have created it
+        }
+        
+        setShowAuthModal(false);
+        setAuthEmail('');
+        setAuthPassword('');
+        setAuthName('');
+      }
+    } catch (error) {
+      alert('Error signing up: ' + error.message);
+    }
+  };
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: authPassword,
+      });
+      if (error) throw error;
+      setShowAuthModal(false);
+      setAuthEmail('');
+      setAuthPassword('');
+    } catch (error) {
+      alert('Error signing in: ' + error.message);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setTrips([]);
+    setCurrentTrip(null);
+  };
 
   // Set random title on mount
   useEffect(() => {
@@ -194,10 +311,49 @@ function App() {
     }
   };
 
-  // Fetch all trips on mount
+  // Fetch trips when user is authenticated
   useEffect(() => {
-    fetchTrips();
-  }, [fetchTrips]);
+    if (user) {
+      fetchTrips();
+    }
+  }, [user, fetchTrips]);
+
+  // Check if user is trip owner and fetch members
+  const fetchTripMembers = useCallback(async () => {
+    if (!currentTrip || !user) {
+      setIsTripOwner(false);
+      setTripMembers([]);
+      return;
+    }
+    try {
+      const response = await api.get(`/api/trips/${currentTrip.id}/members`);
+      const members = Array.isArray(response.data) ? response.data : [];
+      setTripMembers(members);
+
+      // Check if current user is owner
+      const currentUserMember = members.find(m => m.user_id === user.id);
+      const isOwnerFromMembers = currentUserMember?.role === 'owner';
+      
+      // Check if user created the trip (fallback if not in members array)
+      const userCreatedTrip = currentTrip.created_by === user.id || currentTrip.user_id === user.id;
+      
+      // User is owner if:
+      // 1. They're in members array with role 'owner', OR
+      // 2. They created the trip (even if not in members array yet)
+      const isOwner = isOwnerFromMembers || userCreatedTrip;
+      
+      setIsTripOwner(isOwner);
+    } catch (error) {
+      console.error('Error fetching trip members:', error);
+      // Fallback: if error but user created the trip, assume they're owner
+      if (currentTrip?.created_by === user.id) {
+        setIsTripOwner(true);
+      } else {
+        setIsTripOwner(false);
+      }
+      setTripMembers([]);
+    }
+  }, [currentTrip, user]);
 
   // Fetch days when trip changes
   useEffect(() => {
@@ -207,8 +363,9 @@ function App() {
       fetchFood();
       fetchActivities();
       fetchDecisions();
+      fetchTripMembers();
     }
-  }, [currentTrip, fetchLodging, fetchFood, fetchActivities, fetchDecisions]);
+  }, [currentTrip, fetchLodging, fetchFood, fetchActivities, fetchDecisions, fetchTripMembers]);
 
   const fetchDaysForTrip = async (tripId) => {
     try {
@@ -456,7 +613,7 @@ function App() {
         });
       }
       fetchActivities();
-      setNewActivity({ name: '', location: '', notes: '' });
+      setNewActivity({ name: '', location: '', notes: '', icon: 'fa-hiking', link: '' });
       setEditingActivity(null);
       setShowActivitiesModal(false);
     } catch (error) {
@@ -510,8 +667,129 @@ function App() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="loading-screen">
+          <h1>Loading...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="app">
+        <div className="auth-screen">
+          <div className="auth-container">
+            <h1>Travel Planner</h1>
+            <p>Sign in or create an account to start planning your trips</p>
+            <div className="auth-buttons">
+              <button 
+                className="auth-button primary"
+                onClick={() => {
+                  setAuthMode('signin');
+                  setShowAuthModal(true);
+                }}
+              >
+                Sign In
+              </button>
+              <button 
+                className="auth-button secondary"
+                onClick={() => {
+                  setAuthMode('signup');
+                  setShowAuthModal(true);
+                }}
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {showAuthModal && (
+          <div className="modal-overlay" onClick={() => setShowAuthModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2>{authMode === 'signin' ? 'Sign In' : 'Sign Up'}</h2>
+              <form onSubmit={authMode === 'signin' ? handleSignIn : handleSignUp}>
+                {authMode === 'signup' && (
+                  <div className="form-group">
+                    <label htmlFor="auth-name">Full Name</label>
+                    <input
+                      type="text"
+                      id="auth-name"
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      placeholder="Your name"
+                      required={authMode === 'signup'}
+                    />
+                  </div>
+                )}
+                <div className="form-group">
+                  <label htmlFor="auth-email">Email</label>
+                  <input
+                    type="email"
+                    id="auth-email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="auth-password">Password</label>
+                  <input
+                    type="password"
+                    id="auth-password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="modal-buttons">
+                  <button 
+                    type="button" 
+                    className="cancel-button"
+                    onClick={() => {
+                      setShowAuthModal(false);
+                      setAuthEmail('');
+                      setAuthPassword('');
+                      setAuthName('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="submit-button">
+                    {authMode === 'signin' ? 'Sign In' : 'Sign Up'}
+                  </button>
+                </div>
+                <div className="auth-switch">
+                  {authMode === 'signin' ? (
+                    <p>Don't have an account? <button type="button" className="link-button" onClick={() => setAuthMode('signup')}>Sign up</button></p>
+                  ) : (
+                    <p>Already have an account? <button type="button" className="link-button" onClick={() => setAuthMode('signin')}>Sign in</button></p>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="app">
+      <div className="header-bar">
+        <div className="user-info">
+          <span>welcome back, {user.email}</span>
+          <button className="sign-out-button" onClick={handleSignOut}>
+            Sign Out
+          </button>
+        </div>
+      </div>
       <div className="container">
         <div className="header-section">
           <h1 className="title">{randomTitle || "Your trip :)"}</h1>
@@ -585,6 +863,14 @@ function App() {
           </div>
         )}
 
+        {currentTrip && (
+          <TripSharing 
+            tripId={currentTrip.id} 
+            isOwner={isTripOwner}
+            onMemberAdded={fetchTripMembers}
+          />
+        )}
+
         <div className="quick-references">
           <h2 className="references-title">Quick References</h2>
           <div className="references-buttons">
@@ -599,7 +885,7 @@ function App() {
                 fetchLodging();
               }}
             >
-              Lodging Info {lodging.length > 0 && `(${lodging.length})`}
+              lodging{lodging.length > 0 && `(${lodging.length})`}
             </button>
             <button 
               className="reference-button"
@@ -612,7 +898,7 @@ function App() {
                 fetchActivities();
               }}
             >
-              Activity Research {activities.length > 0 && `(${activities.length})`}
+              activities {activities.length > 0 && `(${activities.length})`}
             </button>
             <button 
               className="reference-button"
@@ -625,7 +911,7 @@ function App() {
                 fetchFood();
               }}
             >
-              Food Research {food.length > 0 && `(${food.length})`}
+              food {food.length > 0 && `(${food.length})`}
             </button>
             <button 
               className="reference-button"
@@ -638,7 +924,7 @@ function App() {
                 fetchDecisions();
               }}
             >
-              Decisions {decisions.length > 0 && `(${decisions.length})`}
+              decisions {decisions.length > 0 && `(${decisions.length})`}
             </button>
           </div>
         </div>
@@ -839,10 +1125,13 @@ function App() {
         <div className="modal-overlay" onClick={() => {
           setShowActivitiesModal(false);
           setEditingActivity(null);
-          setNewActivity({ name: '', location: '', notes: '' });
+          setNewActivity({ name: '', location: '', notes: '', icon: 'fa-hiking' });
         }}>
           <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="modal-title">Activity Research</h2>
+            <h2 className="modal-title">
+              <i className="fas fa-hiking" style={{ marginRight: '10px' }}></i>
+              activities
+            </h2>
             <form onSubmit={handleCreateActivity}>
               <div className="form-group">
                 <label htmlFor="activity-name">Activity Name</label>
@@ -866,6 +1155,47 @@ function App() {
                 />
               </div>
               <div className="form-group">
+                <label htmlFor="activity-icon">Icon</label>
+                <div className="icon-selector">
+                  <div className="icon-preview">
+                    <i className={`fas ${newActivity.icon || 'fa-hiking'}`} style={{ fontSize: '24px', marginRight: '10px' }}></i>
+                    <input
+                      type="text"
+                      id="activity-icon"
+                      value={newActivity.icon || 'fa-hiking'}
+                      onChange={(e) => setNewActivity({ ...newActivity, icon: e.target.value })}
+                      placeholder="e.g., fa-hiking, fa-umbrella-beach, fa-museum"
+                    />
+                  </div>
+                  <div className="icon-suggestions">
+                    <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '8px' }}>Popular icons:</p>
+                    <div className="icon-buttons">
+                      {['fa-hiking', 'fa-umbrella-beach', 'fa-museum', 'fa-camera', 'fa-swimming-pool', 'fa-mountain', 'fa-bicycle', 'fa-ship', 'fa-plane', 'fa-car', 'fa-utensils', 'fa-music'].map(icon => (
+                        <button
+                          key={icon}
+                          type="button"
+                          className={`icon-button ${newActivity.icon === icon ? 'selected' : ''}`}
+                          onClick={() => setNewActivity({ ...newActivity, icon })}
+                          title={icon}
+                        >
+                          <i className={`fas ${icon}`}></i>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="activity-link">Link</label>
+                <input
+                  type="url"
+                  id="activity-link"
+                  value={newActivity.link}
+                  onChange={(e) => setNewActivity({ ...newActivity, link: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="form-group">
                 <label htmlFor="activity-notes">Notes</label>
                 <textarea
                   id="activity-notes"
@@ -881,7 +1211,7 @@ function App() {
                   className="cancel-button"
                   onClick={() => {
                     setEditingActivity(null);
-                    setNewActivity({ name: '', location: '', notes: '' });
+                    setNewActivity({ name: '', location: '', notes: '', icon: 'fa-hiking', link: '' });
                   }}
                 >
                   Clear
@@ -899,9 +1229,30 @@ function App() {
                 activities.map(item => (
                   <div key={item.id} className="item-card">
                     <div className="item-content">
-                      <h4>{item.name}</h4>
-                      {item.location && <p><strong>Location:</strong> {item.location}</p>}
-                      {item.notes && <p>{item.notes}</p>}
+                      <h4>
+                        <i className={`fas ${item.icon || 'fa-hiking'}`} style={{ marginRight: '8px', color: 'var(--primary-yellow)' }}></i>
+                        {item.name}
+                      </h4>
+                      {item.location && (
+                        <p>
+                          <i className="fas fa-location-dot" style={{ marginRight: '6px', color: '#666' }}></i>
+                          <strong>Location:</strong> {item.location}
+                        </p>
+                      )}
+                      {item.link && (
+                        <p>
+                          <i className="fas fa-link" style={{ marginRight: '6px', color: '#666' }}></i>
+                          <a href={item.link} target="_blank" rel="noopener noreferrer" className="food-link">
+                            {item.link}
+                          </a>
+                        </p>
+                      )}
+                      {item.notes && (
+                        <p>
+                          <i className="fas fa-sticky-note" style={{ marginRight: '6px', color: '#666' }}></i>
+                          {item.notes}
+                        </p>
+                      )}
                     </div>
                     <div className="item-actions">
                       <button 
@@ -911,16 +1262,20 @@ function App() {
                         setNewActivity({
                           name: item.name,
                           location: item.location || '',
-                          notes: item.notes || ''
+                          notes: item.notes || '',
+                          icon: item.icon || 'fa-hiking',
+                          link: item.link || ''
                         });
                         }}
                       >
+                        <i className="fas fa-edit" style={{ marginRight: '6px' }}></i>
                         Edit
                       </button>
                       <button 
                         className="delete-button"
                         onClick={() => handleDeleteActivity(item.id)}
                       >
+                        <i className="fas fa-trash" style={{ marginRight: '6px' }}></i>
                         Delete
                       </button>
                     </div>
@@ -933,7 +1288,7 @@ function App() {
               onClick={() => {
                 setShowActivitiesModal(false);
                 setEditingActivity(null);
-                setNewActivity({ name: '', location: '', notes: '' });
+                setNewActivity({ name: '', location: '', notes: '', icon: 'fa-hiking' });
               }}
             >
               Close
