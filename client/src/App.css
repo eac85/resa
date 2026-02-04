@@ -1,3 +1,65 @@
+/* Auth Page */
+.auth-screen {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 60px 40px;
+}
+
+.auth-container {
+  max-width: 600px;
+  width: 100%;
+}
+
+.auth-brand {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--black);
+  margin: 0 0 20px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+}
+
+.auth-instruction {
+  font-size: 1rem;
+  color: var(--black);
+  margin: 0 0 30px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.auth-button {
+  background-color: var(--white);
+  border: 2px solid var(--black);
+  border-radius: 10px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--black);
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.auth-button:hover {
+  background-color: var(--gray-light);
+  transform: translateY(-2px);
+}
+
+.auth-button:active {
+  transform: translateY(0);
+}
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -28,7 +90,7 @@
 .title {
   font-size: 2.5rem;
   font-weight: 400;
-  color: #000;
+  color: var(--black);
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -40,8 +102,8 @@
 }
 
 .trip-selector {
-  background-color: #fff;
-  border: 2px solid #000;
+  background-color: var(--white);
+  border: 2px solid var(--black);
   border-radius: 10px;
   padding: 10px 15px;
   font-size: 1rem;
@@ -57,12 +119,12 @@
 
 .new-trip-button {
   background-color: var(--primary-yellow);
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 10px;
   padding: 10px 20px;
   font-size: 1rem;
   font-weight: 500;
-  color: #000;
+  color: var(--black);
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.2s ease;
@@ -80,7 +142,7 @@
 .no-trip-message {
   text-align: center;
   padding: 60px 20px;
-  color: #666;
+  color: var(--gray-text);
   font-size: 1.2rem;
 }
 
@@ -95,8 +157,8 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #fff;
-  border: 2px solid #000;
+  background-color: var(--white);
+  border: 2px solid var(--black);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -126,7 +188,7 @@
 
 .day-circle.selected {
   background-color: var(--primary-yellow);
-  border: 2px solid #000;
+  border: 2px solid var(--black);
 }
 
 .plan-box {
@@ -140,13 +202,13 @@
 .plan-title {
   font-size: 1.2rem;
   font-weight: 400;
-  color: #000;
+  color: var(--black);
   margin-bottom: 15px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .plan-content {
-  color: #333;
+  color: var(--gray-text-dark);
   font-size: 1rem;
   line-height: 1.6;
   min-height: 100px;
@@ -161,7 +223,7 @@
 
 .plan-content:empty:before {
   content: 'Click to add your plan...';
-  color: #999;
+  color: var(--gray-text-light);
 }
 
 .quick-references {
@@ -171,7 +233,7 @@
 .references-title {
   font-size: 1.2rem;
   font-weight: 400;
-  color: #000;
+  color: var(--black);
   margin-bottom: 15px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -189,7 +251,7 @@
   border-radius: 10px;
   padding: 15px 25px;
   font-size: 1rem;
-  color: #000;
+  color: var(--black);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -198,7 +260,7 @@
 }
 
 .reference-button:hover {
-  background-color: #d0d0d0;
+  background-color: var(--gray-medium);
   transform: translateY(-2px);
 }
 
@@ -241,18 +303,19 @@
 }
 
 .modal-content {
-  background-color: #f0f0ed;
+  background-color: var(--cream);
   border-radius: 20px;
   padding: 40px;
   max-width: 500px;
   width: 100%;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--black);
 }
 
 .modal-title {
   font-size: 2rem;
   font-weight: 400;
-  color: #000;
+  color: var(--black);
   margin-bottom: 30px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -266,18 +329,18 @@
   margin-bottom: 8px;
   font-size: 1rem;
   font-weight: 500;
-  color: #000;
+  color: var(--black);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 10px;
   font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #fff;
+  background-color: var(--white);
   box-sizing: border-box;
 }
 
@@ -302,22 +365,22 @@
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.2s ease;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
 }
 
 .cancel-button {
-  background-color: #fff;
-  color: #000;
+  background-color: var(--white);
+  color: var(--black);
 }
 
 .cancel-button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--gray-light);
   transform: translateY(-2px);
 }
 
 .submit-button {
   background-color: var(--primary-yellow);
-  color: #000;
+  color: var(--black);
 }
 
 .submit-button:hover {
@@ -332,7 +395,7 @@
 
 /* Large Modal */
 .large-modal {
-  background-color: #fbfbfa;
+  background-color: var(--modal-bg);
   max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
@@ -348,11 +411,11 @@
 .form-group textarea {
   width: 100%;
   padding: 12px;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 10px;
   font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #fff;
+  background-color: var(--white);
   box-sizing: border-box;
   resize: vertical;
 }
@@ -372,13 +435,13 @@
 .items-list h3 {
   font-size: 1.3rem;
   font-weight: 500;
-  color: #000;
+  color: var(--black);
   margin-bottom: 15px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .empty-message {
-  color: #999;
+  color: var(--gray-text-light);
   font-style: italic;
   text-align: center;
   padding: 20px;
@@ -404,21 +467,21 @@
 .item-content h4 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #000;
+  color: var(--black);
   margin-bottom: 8px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .item-content p {
   font-size: 0.9rem;
-  color: #333;
+  color: var(--gray-text-dark);
   margin: 4px 0;
   line-height: 1.5;
 }
 
 .item-content strong {
   font-weight: 600;
-  color: #000;
+  color: var(--black);
 }
 
 .item-actions {
@@ -436,16 +499,16 @@
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.2s ease;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
 }
 
 .edit-button {
-  background-color: #fff;
-  color: #000;
+  background-color: var(--white);
+  color: var(--black);
 }
 
 .edit-button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--gray-light);
   transform: translateY(-2px);
 }
 
@@ -475,13 +538,13 @@
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.2s ease;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   background-color: var(--oat-milk);
-  color: #000;
+  color: var(--black);
 }
 
 .close-modal-button:hover {
-  background-color: #d0d0d0;
+  background-color: var(--gray-medium);
   transform: translateY(-2px);
 }
 
@@ -531,11 +594,11 @@
 .form-group select {
   width: 100%;
   padding: 12px;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 10px;
   font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #fff;
+  background-color: var(--white);
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -569,7 +632,7 @@
 .icon-suggestions p {
   margin-bottom: 8px;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--gray-text);
 }
 
 .icon-buttons {
@@ -581,9 +644,9 @@
 .icon-button {
   width: 40px;
   height: 40px;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--white);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -593,7 +656,7 @@
 }
 
 .icon-button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--gray-light);
   transform: scale(1.1);
 }
 
@@ -616,6 +679,8 @@
   align-items: center;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px 15px;
+
 }
 
 .user-info {
@@ -627,24 +692,24 @@
 
 .user-info span {
   font-size: 0.95rem;
-  color: #333;
+  color: var(--gray-text-dark);
 }
 
 .sign-out-button {
-  background-color: #fff;
-  border: 2px solid #000;
+  background-color: var(--white);
+  border: 2px solid var(--black);
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #000;
+  color: var(--black);
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.2s ease;
 }
 
 .sign-out-button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--gray-light);
   transform: translateY(-1px);
 }
 
@@ -657,7 +722,7 @@
   margin-top: 20px;
   text-align: center;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--gray-text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -701,19 +766,19 @@
 .trip-sharing-header h3 {
   font-size: 1.2rem;
   font-weight: 500;
-  color: #000;
+  color: var(--black);
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .add-member-button {
   background-color: var(--primary-yellow);
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #000;
+  color: var(--black);
   cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.2s ease;
@@ -739,7 +804,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  background-color: #fff;
+  background-color: var(--white);
   border: 2px solid var(--oat-milk);
   border-radius: 8px;
   margin-bottom: 10px;
@@ -748,7 +813,7 @@
 
 .member-item span {
   font-size: 0.95rem;
-  color: #333;
+  color: var(--gray-text-dark);
   flex: 1;
 }
 
@@ -775,7 +840,7 @@
 }
 
 .no-members-message {
-  color: #999;
+  color: var(--gray-text-light);
   font-style: italic;
   text-align: center;
   padding: 20px;
@@ -785,11 +850,11 @@
 .user-search-input {
   width: 100%;
   padding: 12px;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 10px;
   font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #fff;
+  background-color: var(--white);
   box-sizing: border-box;
 }
 
@@ -801,11 +866,11 @@
 .user-select-dropdown {
   width: 100%;
   padding: 12px;
-  border: 2px solid #000;
+  border: 2px solid var(--black);
   border-radius: 10px;
   font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #fff;
+  background-color: var(--white);
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -816,7 +881,7 @@
 }
 
 .no-users-message {
-  color: #999;
+  color: var(--gray-text-light);
   font-style: italic;
   font-size: 0.9rem;
   margin-top: 8px;
@@ -849,9 +914,7 @@
     justify-content: flex-end;
   }
 
-  .header-bar {
-    padding: 10px 15px;
-  }
+
 
   .user-info {
     gap: 10px;

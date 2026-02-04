@@ -682,11 +682,11 @@ function App() {
       <div className="app">
         <div className="auth-screen">
           <div className="auth-container">
-            <h1>Travel Planner</h1>
-            <p>Sign in or create an account to start planning your trips</p>
+            <h1 className="auth-brand">resa</h1>
+            <p className="auth-instruction">Sign in or create an account to start planning your trips.</p>
             <div className="auth-buttons">
               <button 
-                className="auth-button primary"
+                className="auth-button"
                 onClick={() => {
                   setAuthMode('signin');
                   setShowAuthModal(true);
@@ -695,7 +695,7 @@ function App() {
                 Sign In
               </button>
               <button 
-                className="auth-button secondary"
+                className="auth-button"
                 onClick={() => {
                   setAuthMode('signup');
                   setShowAuthModal(true);
@@ -710,7 +710,7 @@ function App() {
         {showAuthModal && (
           <div className="modal-overlay" onClick={() => setShowAuthModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>{authMode === 'signin' ? 'Sign In' : 'Sign Up'}</h2>
+              <h2 className="modal-title">{authMode === 'signin' ? 'Sign In' : 'Sign Up'}</h2>
               <form onSubmit={authMode === 'signin' ? handleSignIn : handleSignUp}>
                 {authMode === 'signup' && (
                   <div className="form-group">
